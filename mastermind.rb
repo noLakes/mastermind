@@ -2,7 +2,6 @@ DEFAULT_CELL = ['[', ' ', ' ', ' ', ']']
 
 class Pin
   attr_reader :val, :txt
-
   @@COLORS = ['R', 'G', 'B', 'W', 'Y', 'O']
   
   def initialize(color=@@COLORS.sample)
@@ -13,6 +12,12 @@ class Pin
     pin = Pin.new
     pin.set_val = ' '
     return pin
+  end
+
+  def Pin.build(num)
+    @container = {}
+    num.times {|num| @container[num + 1] = self.new(' ')}
+    return @container
   end
 
   def txt
@@ -42,12 +47,19 @@ class Clue < Pin
 end
 
 class Row
-  # figure out the best way to construct a row object
-  # change name of 'cell' to pin - its representing the colored pins afterall
-  # include cell printing characters in Row or Board area
-  def initialize
-    @pins = {}
-    @clues = {}
+
+  attr_reader :pins, :clues
+  def initialize(pins=4, clues=4)
+    @pins = {}.merge!(Pin.build(pins))
+    @clues = {}.merge!(Clue.build(clues))
+  end
+
+  def pin_val(pin, val)
+    @pins[pin].set_val = val
+  end
+
+  def txt
+    #build the text used to show the row in command line window!
   end
 end
 
@@ -59,12 +71,10 @@ class Board
 end
 
 
+# testing area below!!!!
+
 # [   ][   ][   ][   ] --------- [ ][ ][ ][ ]
 
-myPins = {}
-10.times do |x|
-  myPins[x+1] = Pin.new
-end
-
-myPins.each_value {|key| puts key.txt}
-
+x = Row.new(4, 4)
+x.pin_val(1, 'W')
+p x.pins[1].txt
