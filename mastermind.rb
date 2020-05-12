@@ -1,33 +1,53 @@
 DEFAULT_CELL = ['[', ' ', ' ', ' ', ']']
 
-class Cell
-  attr_reader :full, :val
+class Pin
+  attr_reader :val, :txt
+
+  @@COLORS = ['R', 'G', 'B', 'W', 'Y', 'O']
   
-  def initialize(val=' ')
-    @val = val
-    @full = ['[', ' ', "#{@val}", ' ', ']'].join('')
+  def initialize(color=@@COLORS.sample)
+    @val = color
   end
 
-  def newVal(val)
-    @val = val
-    @full = ['[', ' ', "#{@val}", ' ', ']'].join('')
+  def Pin.blank 
+    pin = Pin.new
+    pin.set_val = ' '
+    return pin
   end
 
-  def clearVal
+  def txt
+    return ['[', ' ', "#{@val}", ' ', ']'].join('')
+  end
+
+  def set_val=(color)
+    @val = color
+  end
+
+  def clear_val
     @val = ' '
   end
 
 end
 
+class Clue < Pin
+  @@COLORS = ['X', 'O']
+
+  def initialize(color=' ')
+    @val = color
+  end
+
+  def txt
+    return ['[', "#{@val}", ']'].join('')
+  end
+end
+
 class Row
-  attr_reader :full, :cells
   # figure out the best way to construct a row object
   # change name of 'cell' to pin - its representing the colored pins afterall
   # include cell printing characters in Row or Board area
-  def initialize(cell1=Cell.new, cell2=Cell.new, cell3=Cell.new, cell4=Cell.new)
-    @cells = {1 => cell1.full, 2 => cell2.full, 3 => cell3.full, 4 => cell4.full}
-    @full = @cells.values.flatten.join
-
+  def initialize
+    @pins = {}
+    @clues = {}
   end
 end
 
@@ -41,9 +61,10 @@ end
 
 # [   ][   ][   ][   ] --------- [ ][ ][ ][ ]
 
-x = Cell.new('X')
-puts x.full
-x.newVal('J')
-puts x.full
-row = Row.new
-puts row.full
+myPins = {}
+10.times do |x|
+  myPins[x+1] = Pin.new
+end
+
+myPins.each_value {|key| puts key.txt}
+
