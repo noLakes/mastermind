@@ -97,7 +97,7 @@ class Code
 
   def txt
     if self.cracked?
-      return self.reveal
+      return reveal
     else
       return 'CODE [ ? ][ ? ][ ? ][ ? ]'
     end
@@ -137,14 +137,33 @@ class Board
 
   def txt
     board = @rows.to_a.reverse.to_h
-    text = []
+    text = ['------------- M A S T E R M I N D -------------', "\n\n"]
 
     board.each_value do |val|
       text << val.txt
       text << "\n"
     end
+    text << "\n"
     return text.join
   end
+
+end
+
+class Master
+  def initialize(name='Master', humanity=false)
+    @name = name
+    @human = humanity
+  end
+end
+
+class Breaker
+  def initialize(name='Breaker', humanity=false)
+    @name = name
+    @human = humanity
+end
+
+class Game
+  def initialize
 
 end
 
@@ -155,5 +174,5 @@ end
 
 
 x = Board.new(12)
-x.addCode('G', 'R', 'B', 'Y')
+x.addCode('x', 'x', 'x', 'x')
 puts x.txt
