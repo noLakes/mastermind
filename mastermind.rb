@@ -1,9 +1,8 @@
-COLORS = ['R', 'G', 'B', 'W', 'Y', 'O']
 
 #contains and displays color value
 class Pin
   attr_reader :val, :txt
-  @@COLORS = ['R', 'G', 'B', 'W', 'Y', 'O']
+  @@PIN_COLORS = ['R', 'G', 'B', 'W', 'Y', 'P']
 
   def initialize(color=' ')
     @val = color
@@ -23,11 +22,14 @@ class Pin
     @val = color
   end
 
+  def Pin.colors
+    return @@PIN_COLORS
+  end
 end
 
 #smaller version of pin used for guess feedback (X = correct pos+col / O = correct col)
 class Clue < Pin
-  @@COLORS = ['X', 'O']
+  @@CLUE_COLORS = ['X', 'O']
 
   def initialize(color=' ')
     @val = color
@@ -35,6 +37,10 @@ class Clue < Pin
 
   def txt
     return ['[', "#{@val}", ']'].join('')
+  end
+
+  def Clue.colors
+    return @@CLUE_COLORS
   end
 end
 
@@ -85,8 +91,8 @@ end
 class Code 
   attr_reader :cracked, :row
 
-  def initialize(pin1=COLORS.sample, pin2=COLORS.sample, 
-                pin3=COLORS.sample, pin4=COLORS.sample)
+  def initialize(pin1=Pin.colors.sample, pin2=Pin.colors.sample, 
+                pin3=Pin.colors.sample, pin4=Pin.colors.sample)
     @row = Row.new(4, 0)
     @row.set_pin_val(1, pin1)
     @row.set_pin_val(2, pin2)
@@ -107,7 +113,7 @@ class Code
     return @cracked
   end
 
-  def crack(pin1, pin2, pin3, pin4)
+  def crack(guess)
     @guess = [pin1, pin2, pin3, pin4]
 
     #if crack = true return
@@ -130,8 +136,8 @@ class Board
     @code = {}
   end
 
-  def addCode(pin1, pin2, pin3, pin4)
-    @code[:code] = Code.new(pin1, pin2, pin3, pin4)
+  def addCode(code)
+    @code[:code] = code
     @rows.merge!(@code)
   end
 
@@ -150,29 +156,75 @@ class Board
 end
 
 class Master
-  def initialize(name='Master', humanity=false)
+  attr_reader :name, :humanity
+  def initialize(humanity=false, name='Master')
     @name = name
     @human = humanity
+    @code = []
   end
+
+  def makeCode
+    if @human == true
+      until checkCode(@code) do
+        puts "Please enter the 4 colors for your code. Your options are: #{Pin.colors.join(' ')}"
+        @code = gets.chomp.upcase.split(//)
+      end
+      return Code.new(@code[0], @code[1], @code[2], @code[3])
+    else
+      puts "beep boop. code made!"
+      return Code.new
+    end
+  end
+
+  def checkCode(code)
+    if code.length == 4
+      if code.all? {|char| Pin.colors.include?(char)}
+        return true
+      else
+        puts "Error: Colors must be included in #{Pin.colors.join(' ')}"
+        return false
+      end
+    else
+      puts 'Error: Code incorrect length!'
+      return false
+    end
+  end
+
 end
 
 class Breaker
-  def initialize(name='Breaker', humanity=false)
+  attr_reader :name, :humanity
+  def initialize(humanity=true, name='Breaker')
     @name = name
     @human = humanity
+  end
+
+  def try_solve
+    #checks if human, asks you to input code guess, returns code guess as object with keys 1,2,3,4
+  end
+
 end
 
 class Game
-  def initialize
+  
+  def initialize(turns=12, master=false, breaker=true)
+    @board = Board.new(turns)
+    @players = {:master => Master.new(master), :breaker => Breaker.new(breaker)}
+    @turn = 0
+  end
+
+  def play
+    @board.addCode(@players[:master].makeCode) #adds a code to the board
+  end
 
 end
-
-
 
 
 # CAUTION: test are below. working code ^overhead^
 
+x = Game.new(12)
+master = Master.new(false)
+code = master.makeCode
+puts code.txt
 
-x = Board.new(12)
-x.addCode('x', 'x', 'x', 'x')
-puts x.txt
+#to do next: add game start, logic of a turn (updating txt at end), entering and evaluating a guess,
