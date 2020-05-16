@@ -81,14 +81,6 @@ class Row
     return @clues[clue].val
   end
 
-  def addGuess(guess)
-    
-  end
-
-  def addClue(clue)
-   
-  end
-
   def txt
     row = [@number, ' ']
     @pins.each_value {|pin| row << pin.txt}
@@ -101,9 +93,9 @@ class Row
 
 end
 
-module Codes
+module CodeLogic
   
-  def test(code)
+  def testCode(code)
     if code.length == 4
       if code.all? {|char| Pin.colors.include?(char)}
         return true
@@ -115,6 +107,24 @@ module Codes
       puts 'Error: Code incorrect length!'
       return false
     end
+  end
+
+  def make(human)
+    code = []
+    if human == true
+      until testCode(code) do
+        puts "Please enter the 4 colors for your code. Colors: #{Pin.colors.join(' ')}"
+        code = gets.chomp.upcase.split(//)
+      end
+      return Code.new(code[0], code[1], code[2], code[3])
+    else
+      puts "beep boop. code made!"
+      return Code.new
+    end
+  end
+
+  def eval(master, breaker)
+
   end
 
 end
@@ -132,7 +142,7 @@ class Code
   end
 
   def getPin(pin)
-    return @row[pin].val
+    return @row.getPin(pin)
   end
 
   def txt
@@ -168,12 +178,18 @@ class Board
 
   def initialize(rows=12)
     @rows = {}.merge!(Row.build(rows))
-    @code = {}
   end
 
   def addCode(code)
-    @code[:code] = code
-    @rows.merge!(@code)
+    @rows.merge!({ :code => code })
+  end
+
+  def addGuess(row, code)
+    i = 1
+    until i == 5
+      @rows[row].set_pin_val(i, code.getPin(i))
+      i += 1
+    end
   end
 
   def txt
@@ -190,87 +206,52 @@ class Board
 
 end
 
-class Master
-  include Codes
-  attr_reader :name, :humanity
-  def initialize(humanity=false, name='Master')
-    @name = name
+class Player
+  attr_reader :name, :human
+  def initialize(humanity=false)
     @human = humanity
-    @code = []
-  end
-
-  def makeCode
-    if @human == true
-      until test(@code) do
-        puts "Please enter the 4 colors for your code. Colors: #{Pin.colors.join(' ')}"
-        @code = gets.chomp.upcase.split(//)
-      end
-      return Code.new(@code[0], @code[1], @code[2], @code[3])
-    else
-      puts "beep boop. code made!"
-      return Code.new
-    end
-  end
-
-end
-
-class Breaker
-  include Codes
-  attr_reader :name, :humanity
-  def initialize(humanity=true, name='Breaker')
-    @name = name
-    @human = humanity
-    @guess = []
-  end
-
-  def guess
-    if @human == true
-      until test(@guess) do
-        puts "Please enter the 4 colors for your guess. Colors: #{Pin.colors.join(' ')}"
-        @guess = gets.chomp.upcase.split(//)
-      end
-      return Code.new(@guess[0], @guess[1], @guess[2], @guess[3])
-    else
-      #AI STUFF
-      puts "Beep boop, random guess (for now)"
-      return Code.new
-    end
   end
 
 end
 
 class Game
-  include Codes
-  attr_reader :board, :players, :turn
-  def initialize(turns=12, master=false, breaker=true)
+  include CodeLogic
+  attr_reader :board, :players, :turn, :turns
+  
+  def initialize(turns=12, masterHuman=false, breakerHuman=true)
     @board = Board.new(turns)
-    @players = {:master => Master.new(master), :breaker => Breaker.new(breaker)}
-    @turn = 0
+    @master = Player.new(masterHuman)
+    @breaker = Player.new(breakerHuman)
+    @turn = 1
+    @turns = turns
   end
 
   def play
     puts "\n\nWelcome to MASTERMIND! Lets begin by setting a code."
-    @board.addCode(@players[:master].makeCode)
+    @board.addCode(make(@master.human))
     turn
   end
 
   private
   def turn
-    @turn += 1
     puts @board.txt
     puts "Turn: #{@turn} / Enter your guess below!"
-    guess = @players[:breaker].guess
-    @board.rows[@turn].addGuess(guess)
-    turn
+    guess = make(@breaker.human)
+    @board.addGuess(@turn, guess)
+    if @turn == @turns
+      #lose game here
+      puts @board.txt
+    else
+      @turn += 1
+      turn
+    end
+
   end
+
 end
 
-
 # CAUTION: test are below. working code ^overhead^
-
-x = Game.new(12, false, true)
+x = Game.new(12, false, false)
 x.play
 
-
-#to do next: you were stuck on the addGuess methods at the end of Game:turn (also, maybe refactor the getValue methods in your classes)
-#logic of a turn (updating txt at end), entering and evaluating a guess,
+#to do next: make code evaluate methods and a way to calculate and return clues! Almost done!
