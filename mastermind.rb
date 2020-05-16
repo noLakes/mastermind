@@ -73,24 +73,54 @@ class Row
     @clues[clue].set_val = val
   end
 
+  def getPin(pin)
+    return @pins[pin].val
+  end
+
+  def getClue(clue)
+    return @clues[clue].val
+  end
+
+  def addGuess(guess)
+    
+  end
+
+  def addClue(clue)
+   
+  end
+
   def txt
     row = [@number, ' ']
     @pins.each_value {|pin| row << pin.txt}
-
     unless @clues.length.zero?
       row << ' --------- '
       @clues.each_value {|clue| row << clue.txt}
     end
-
     return row.join
-    
+  end
+
+end
+
+module Codes
+  
+  def test(code)
+    if code.length == 4
+      if code.all? {|char| Pin.colors.include?(char)}
+        return true
+      else
+        puts "Error: Colors must be included in #{Pin.colors.join(' ')}"
+        return false
+      end
+    else
+      puts 'Error: Code incorrect length!'
+      return false
+    end
   end
 
 end
 
 class Code 
   attr_reader :cracked, :row
-
   def initialize(pin1=Pin.colors.sample, pin2=Pin.colors.sample, 
                 pin3=Pin.colors.sample, pin4=Pin.colors.sample)
     @row = Row.new(4, 0)
@@ -98,7 +128,11 @@ class Code
     @row.set_pin_val(2, pin2)
     @row.set_pin_val(3, pin3)
     @row.set_pin_val(4, pin4)
-    @cracked = false
+    @cracked = true
+  end
+
+  def getPin(pin)
+    return @row[pin].val
   end
 
   def txt
@@ -126,6 +160,7 @@ class Code
     @row.pins.each_value {|pin| code << pin.txt}
     return code.join
   end
+ 
 end
 
 class Board
@@ -156,6 +191,7 @@ class Board
 end
 
 class Master
+  include Codes
   attr_reader :name, :humanity
   def initialize(humanity=false, name='Master')
     @name = name
@@ -165,8 +201,8 @@ class Master
 
   def makeCode
     if @human == true
-      until checkCode(@code) do
-        puts "Please enter the 4 colors for your code. Your options are: #{Pin.colors.join(' ')}"
+      until test(@code) do
+        puts "Please enter the 4 colors for your code. Colors: #{Pin.colors.join(' ')}"
         @code = gets.chomp.upcase.split(//)
       end
       return Code.new(@code[0], @code[1], @code[2], @code[3])
@@ -176,37 +212,36 @@ class Master
     end
   end
 
-  def checkCode(code)
-    if code.length == 4
-      if code.all? {|char| Pin.colors.include?(char)}
-        return true
-      else
-        puts "Error: Colors must be included in #{Pin.colors.join(' ')}"
-        return false
+end
+
+class Breaker
+  include Codes
+  attr_reader :name, :humanity
+  def initialize(humanity=true, name='Breaker')
+    @name = name
+    @human = humanity
+    @guess = []
+  end
+
+  def guess
+    if @human == true
+      until test(@guess) do
+        puts "Please enter the 4 colors for your guess. Colors: #{Pin.colors.join(' ')}"
+        @guess = gets.chomp.upcase.split(//)
       end
+      return Code.new(@guess[0], @guess[1], @guess[2], @guess[3])
     else
-      puts 'Error: Code incorrect length!'
-      return false
+      #AI STUFF
+      puts "Beep boop, random guess (for now)"
+      return Code.new
     end
   end
 
 end
 
-class Breaker
-  attr_reader :name, :humanity
-  def initialize(humanity=true, name='Breaker')
-    @name = name
-    @human = humanity
-  end
-
-  def try_solve
-    #checks if human, asks you to input code guess, returns code guess as object with keys 1,2,3,4
-  end
-
-end
-
 class Game
-  
+  include Codes
+  attr_reader :board, :players, :turn
   def initialize(turns=12, master=false, breaker=true)
     @board = Board.new(turns)
     @players = {:master => Master.new(master), :breaker => Breaker.new(breaker)}
@@ -214,17 +249,28 @@ class Game
   end
 
   def play
-    @board.addCode(@players[:master].makeCode) #adds a code to the board
+    puts "\n\nWelcome to MASTERMIND! Lets begin by setting a code."
+    @board.addCode(@players[:master].makeCode)
+    turn
   end
 
+  private
+  def turn
+    @turn += 1
+    puts @board.txt
+    puts "Turn: #{@turn} / Enter your guess below!"
+    guess = @players[:breaker].guess
+    @board.rows[@turn].addGuess(guess)
+    turn
+  end
 end
 
 
 # CAUTION: test are below. working code ^overhead^
 
-x = Game.new(12)
-master = Master.new(false)
-code = master.makeCode
-puts code.txt
+x = Game.new(12, false, true)
+x.play
 
-#to do next: add game start, logic of a turn (updating txt at end), entering and evaluating a guess,
+
+#to do next: you were stuck on the addGuess methods at the end of Game:turn (also, maybe refactor the getValue methods in your classes)
+#logic of a turn (updating txt at end), entering and evaluating a guess,
