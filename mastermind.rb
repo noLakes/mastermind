@@ -139,8 +139,7 @@ module CodeLogic
         clues << 'O' if accum.count(val) <= master.values.count(val)
       end
     end
-    p clues
-    return clues
+    return clues.shuffle
   end
 end
 
@@ -212,7 +211,11 @@ class Board
   end
 
   def addClues(row, clues)
-
+    i = 1
+    until i > clues.length
+      @rows[row].set_clue_val(i, clues[i - 1])
+      i += 1
+    end
   end
 
   def txt
@@ -259,9 +262,13 @@ class Game
   def turn
     puts @board.txt
     puts "Turn: #{@turn} / Enter your guess below!"
+    
     guess = make(@breaker.human)
     @board.addGuess(@turn, guess)
-    evaluate(@board.rows[:code].getPins, guess.getPins) 
+    
+    clues = evaluate(@board.rows[:code].getPins, guess.getPins) 
+    @board.addClues(@turn, clues)
+
     if @turn == @turns
       #lose game here
       puts @board.txt
@@ -279,3 +286,4 @@ x = Game.new(12, false, false)
 x.play
 
 #to do next: make code evaluate methods and a way to calculate and return clues! Almost done!
+#convert code check loop to do...while
