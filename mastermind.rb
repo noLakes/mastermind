@@ -139,7 +139,7 @@ module CodeLogic
         clues << 'O' if accum.count(val) <= master.values.count(val)
       end
     end
-    return clues.shuffle
+    return clues
   end
 end
 
@@ -282,7 +282,7 @@ class Game
 end
 
 # CAUTION: test are below. working code ^overhead^
-x = Game.new(12, false, false)
+x = Game.new(12, true, true)
 x.play
 
 #to do next: make code evaluate methods and a way to calculate and return clues! Almost done!
