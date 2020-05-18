@@ -123,10 +123,25 @@ module CodeLogic
     end
   end
 
-  def eval(master, breaker)
-
+  def evaluate(master, breaker)
+    clues = []
+    accum = []
+    breaker.each_pair do |key, val|
+      if master[key] == val
+        clues << 'X'
+        master.delete(key)
+        breaker.delete(key)
+      end 
+    end
+    breaker.each_value do |val|
+      if master.value?(val)
+        accum << val
+        clues << 'O' if accum.count(val) <= master.values.count(val)
+      end
+    end
+    p clues
+    return clues
   end
-
 end
 
 class Code 
@@ -143,6 +158,10 @@ class Code
 
   def getPin(pin)
     return @row.getPin(pin)
+  end
+
+  def getPins
+    return {1 => @row.getPin(1), 2 => @row.getPin(2), 3 => @row.getPin(3), 4 => @row.getPin(4)}
   end
 
   def txt
@@ -192,6 +211,10 @@ class Board
     end
   end
 
+  def addClues(row, clues)
+
+  end
+
   def txt
     board = @rows.to_a.reverse.to_h
     text = ['------------- M A S T E R M I N D -------------', "\n\n"]
@@ -238,6 +261,7 @@ class Game
     puts "Turn: #{@turn} / Enter your guess below!"
     guess = make(@breaker.human)
     @board.addGuess(@turn, guess)
+    evaluate(@board.rows[:code].getPins, guess.getPins) 
     if @turn == @turns
       #lose game here
       puts @board.txt
