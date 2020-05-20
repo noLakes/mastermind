@@ -50,7 +50,6 @@ class Row
     @number = (@@row_count + 1).to_s + '  '
     @number << ' ' if @number.length == 3
     @@row_count += 1
-
     @pins = {}.merge!(Pin.build(pins))
     @clues = {}.merge!(Clue.build(clues))
   end
@@ -58,7 +57,7 @@ class Row
   def Row.build(num, clues=4)
     @container = {}
     num.times {|count| @container[count + 1] = self.new(4, clues)}
-    return @container #.to_a.reverse.to_h if you want....
+    return @container
   end
 
   def set_pin_val(pin, val)
@@ -86,7 +85,6 @@ class Row
     end
     return row.join
   end
-
 end
 
 module CodeLogic
@@ -115,6 +113,7 @@ module CodeLogic
       end
       return Code.new(code[0], code[1], code[2], code[3])
     else
+      sleep 0.2
       puts "beep boop. code made!"
       return Code.new
     end
@@ -149,7 +148,7 @@ class Code
     @row.set_pin_val(2, pin2)
     @row.set_pin_val(3, pin3)
     @row.set_pin_val(4, pin4)
-    @cracked = true
+    @cracked = false
   end
 
   def getPin(pin)
@@ -172,11 +171,8 @@ class Code
     return @cracked
   end
 
-  def crack(guess)
-    @guess = [pin1, pin2, pin3, pin4]
-
-    #if crack = true return
-
+  def crack(clues)
+    @cracked = true if clues.length == 4 && clues.all?('X')
   end
 
   private
@@ -264,6 +260,7 @@ class Game
     clues = evaluate(@board.rows[:code].getPins, guess.getPins)
     @board.addClues(@turn, clues)
     if clues.length == 4 && clues.all?('X')
+      @board.rows[:code].crack(clues)
       puts @board.txt
       game_over("Game over! Breaker guessed the code in #{@turn} turns!")
     elsif @turn == @turns
@@ -294,6 +291,6 @@ class Game
   end
 end
 
-# CAUTION: test are below. working code ^overhead^
-x = Game.new(12, false, true)
-x.play
+# SAMPLE GAME BELOW
+#x = Game.new(12, false, false)
+#x.play
