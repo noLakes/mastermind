@@ -1,5 +1,3 @@
-
-#contains and displays color value
 class Pin
   attr_reader :val, :txt
   @@PIN_COLORS = ['R', 'G', 'B', 'W', 'Y', 'P']
@@ -27,7 +25,6 @@ class Pin
   end
 end
 
-#smaller version of pin used for guess feedback (X = correct pos+col / O = correct col)
 class Clue < Pin
   @@CLUE_COLORS = ['X', 'O']
 
@@ -44,7 +41,6 @@ class Clue < Pin
   end
 end
 
-#holds and displays pins
 class Row
   attr_reader :pins, :clues, :number
 
@@ -112,9 +108,10 @@ module CodeLogic
   def make(human)
     code = []
     if human == true
-      until testCode(code) do
+      loop do
         puts "Please enter the 4 colors for your code. Colors: #{Pin.colors.join(' ')}"
         code = gets.chomp.upcase.split(//)
+        break if testCode(code)
       end
       return Code.new(code[0], code[1], code[2], code[3])
     else
@@ -262,28 +259,41 @@ class Game
   def turn
     puts @board.txt
     puts "Turn: #{@turn} / Enter your guess below!"
-    
     guess = make(@breaker.human)
-    @board.addGuess(@turn, guess)
-    
-    clues = evaluate(@board.rows[:code].getPins, guess.getPins) 
+    @board.addGuess(@turn, guess) 
+    clues = evaluate(@board.rows[:code].getPins, guess.getPins)
     @board.addClues(@turn, clues)
-
-    if @turn == @turns
-      #lose game here
+    if clues.length == 4 && clues.all?('X')
       puts @board.txt
+      game_over("Game over! Breaker guessed the code in #{@turn} turns!")
+    elsif @turn == @turns
+      puts @board.txt
+      game_over('Game over! Turn limit reached. Mastermind wins!')
     else
       @turn += 1
       turn
     end
-
   end
 
+  def game_over(msg)
+      puts msg
+      sleep 1
+      answer = ''
+      loop do
+        puts "Play again? [y/n]"
+        answer = gets.chomp.downcase
+        break if answer == 'y' or answer == 'n'
+      end
+      new_game if answer == 'y'
+  end
+
+  def new_game
+    @board = Board.new(turns)
+    @turn = 1
+    play
+  end
 end
 
 # CAUTION: test are below. working code ^overhead^
-x = Game.new(12, true, true)
+x = Game.new(12, false, true)
 x.play
-
-#to do next: make code evaluate methods and a way to calculate and return clues! Almost done!
-#convert code check loop to do...while
